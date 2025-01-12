@@ -1,16 +1,27 @@
-FROM alpine:latest
+FROM alpine:3.20
 
-MAINTAINER colinwjd <wjdwjd@live.cn>
+LABEL maintainer="braccae <braccae@ghomelabb.cc>"
 
-RUN apk update \
-	&& apk add --no-cache --update aria2 darkhttpd \
-	&& mkdir -p aria2/conf aria2/conf-temp aria2/downloads aria-ng \
-	&& wget --no-check-certificate https://github.com/mayswind/AriaNg/releases/download/1.1.1/AriaNg-1.1.1.zip \
-	&& unzip AriaNg-1.1.1.zip -d aria-ng \
-	&& rm -rf AriaNg-1.1.1.zip
+# Build arguments
+ARG ARIANG_VERSION=1.1.1
 
+# Install required packages
+RUN apk add --no-cache \
+    aria2 \
+    darkhttpd
+
+# Set up working directories
+RUN mkdir -p /aria2/conf /aria2/conf-temp /aria2/downloads /aria-ng
+
+# Download and install AriaNg
+RUN wget --no-check-certificate https://github.com/mayswind/AriaNg/releases/download/${ARIANG_VERSION}/AriaNg-${ARIANG_VERSION}.zip \
+    && unzip AriaNg-${ARIANG_VERSION}.zip -d /aria-ng \
+    && rm -f AriaNg-${ARIANG_VERSION}.zip
+
+# Copy configuration files
+COPY conf-temp /aria2/conf-temp/
 COPY init.sh /aria2/init.sh
-COPY conf-temp /aria2/conf-temp
+RUN chmod +x /aria2/init.sh
 
 WORKDIR /
 VOLUME ["/aria2/conf", "/aria2/downloads"]

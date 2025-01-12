@@ -1,0 +1,18 @@
+---
+services:
+
+  aria2-ariang:
+    #image: ghcr.io/braccae/aria2-ariang:latest
+    build:
+      context: .
+      dockerfile: Dockerfile
+    restart: unless-stopped
+    volumes:
+      - /DOWNLOAD_DIR:/aria2/downloads
+      - /CONFIG_DIR:/aria2/conf
+    environment:
+      - SECRET=${SECRET}
+    ports:
+      - "6800:6800"
+      - "80:80"
+      - "8080:8080"

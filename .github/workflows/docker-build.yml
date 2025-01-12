@@ -2,9 +2,8 @@ name: Docker Build on AriaNg Release
 
 on:
   workflow_dispatch:  # Allow manual triggers
-  # schedule:
-  #   - cron: '0 */12 * * *'  # Check twice daily for new releases
-
+  schedule:
+    - cron: '0 12 * * 1/5'  # At 12:00pm on Monday and Saturday
 env:
   REGISTRY: ghcr.io
   IMAGE_NAME: ${{ github.repository }}

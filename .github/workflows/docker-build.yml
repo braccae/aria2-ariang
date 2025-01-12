@@ -1,16 +1,16 @@
-name: Docker Build on AriaNg Release
+name: Docker Build on Release
 
 on:
-  workflow_dispatch:  # Allow manual triggers
-  # schedule:
-  #   - cron: '0 */12 * * *'  # Check twice daily for new releases
+  release:
+    types: [published]
+  workflow_dispatch:  # Allow manual triggers for testing
 
 env:
   REGISTRY: ghcr.io
   IMAGE_NAME: ${{ github.repository }}
 
 jobs:
-  check-and-build:
+  build:
     runs-on: ubuntu-latest
     permissions:
       contents: read
@@ -20,12 +20,14 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Get latest AriaNg release
-        id: ariang-release
+      - name: Get release version
+        id: version
         run: |
-          LATEST_VERSION=$(curl -s https://api.github.com/repos/mayswind/AriaNg/releases/latest | jq -r .tag_name)
-          echo "version=${LATEST_VERSION}" >> $GITHUB_OUTPUT
-          echo "Latest AriaNg version: ${LATEST_VERSION}"
+          # Remove 'v' prefix if present in the tag
+          VERSION=${GITHUB_REF#refs/tags/}
+          VERSION=${VERSION#v}
+          echo "version=${VERSION}" >> $GITHUB_OUTPUT
+          echo "Building version: ${VERSION}"
 
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
@@ -44,7 +46,7 @@ jobs:
           images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
           tags: |
             type=raw,value=latest
-            type=raw,value=${{ steps.ariang-release.outputs.version }}
+            type=raw,value=${{ steps.version.outputs.version }}
 
       - name: Build and push Docker image
         uses: docker/build-push-action@v5
@@ -54,4 +56,4 @@ jobs:
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
           build-args: |
-            ARIANG_VERSION=${{ steps.ariang-release.outputs.version }}
+            ARIANG_VERSION=${{ steps.version.outputs.version }}
